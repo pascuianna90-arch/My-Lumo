@@ -1,0 +1,22 @@
+{
+  "lumo": {
+    "name": "Lumo",
+    "mood": "Boldog",
+    "level": 12,
+    "location": "Erdő",
+    "followers": 24581,
+    "inventory": ["Medál", "Pizza", "Kalap"],
+    "worldChanges": ["Lumo az erdőben él."],
+    "lastAction": "Várja a következő parancsot."
+  },
+  "history": [
+    {"id":4821,"country":"🇺🇸 USA","command":"Vegyél egy csirkét!","action":"chicken","status":"done","createdAt":"2026-10-03T00:45:00Z"},
+    {"id":4820,"country":"🇩🇪 Németország","command":"Egyél pizzát!","action":"pizza","status":"done","createdAt":"2026-10-03T00:39:00Z"},
+    {"id":4819,"country":"🇷🇴 Románia","command":"Vegyél fel egy kalapot!","action":"dress","status":"done","createdAt":"2026-10-03T00:32:00Z"},
+    {"id":4818,"country":"🇭🇺 Magyarország","command":"Menj a hegyre!","action":"mountain","status":"done","createdAt":"2026-10-03T00:24:00Z"},
+    {"id":4817,"country":"🇧🇷 Brazília","command":"Táncolj!","action":"dance","status":"done","createdAt":"2026-10-03T00:06:00Z"}
+  ],
+  "queue": [],
+  "current": null,
+  "nextId": 4822
+}
