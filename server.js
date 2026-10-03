@@ -12,12 +12,21 @@ const SEED_FILE = path.join(ROOT, 'data', 'state.json');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(STATE_FILE) && fs.existsSync(SEED_FILE)) fs.copyFileSync(SEED_FILE, STATE_FILE);
 const PAYMENTS_ENABLED = String(process.env.PAYMENTS_ENABLED || 'false').toLowerCase() === 'true';
+const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').trim();
+const OPENAI_MODEL = String(process.env.OPENAI_MODEL || 'gpt-6-astra').trim();
+const AI_CHAT_ENABLED = Boolean(OPENAI_API_KEY);
 
 function loadState() {
   try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); }
   catch (e) { console.error('State load failed:', e); process.exit(1); }
 }
 let state = loadState();
+
+function ensureStateShape() {
+  if (!Array.isArray(state.chatWall)) state.chatWall = [];
+  if (!Number.isFinite(state.chatNextId)) state.chatNextId = 1;
+}
+ensureStateShape();
 
 function saveState() {
   const tmp = STATE_FILE + '.tmp';
@@ -118,6 +127,83 @@ function applyAction(item) {
   l.level = 12 + Math.floor(completed / 10);
 }
 
+function publicChatItem(item) {
+  return {
+    id: item.id,
+    user: item.user,
+    message: item.message,
+    reply: item.reply,
+    createdAt: item.createdAt
+  };
+}
+
+function extractResponseText(data) {
+  if (!data || !Array.isArray(data.output)) return '';
+  const parts = [];
+  for (const item of data.output) {
+    if (!item || item.type !== 'message' || !Array.isArray(item.content)) continue;
+    for (const part of item.content) {
+      if (part && (part.type === 'output_text' || part.type === 'text') && typeof part.text === 'string') {
+        parts.push(part.text);
+      }
+    }
+  }
+  return parts.join('\n').trim();
+}
+
+async function askLumoAI(message, sessionId) {
+  if (!AI_CHAT_ENABLED) {
+    const err = new Error('Lumo AI chat is not configured yet.');
+    err.statusCode = 503;
+    throw err;
+  }
+
+  const history = state.chatWall
+    .filter(x => x.sessionId === sessionId)
+    .slice(-6)
+    .flatMap(x => [
+      { role: 'user', content: x.message },
+      { role: 'assistant', content: x.reply }
+    ]);
+
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      instructions:
+        'You are Lumo, the warm, playful white fluffy cat character in the My Lumo life-simulation game. ' +
+        'Reply in the same language as the player. Keep replies short enough for a speech bubble: normally 1-2 sentences. ' +
+        'Be kind, cheerful, emotionally expressive and family-friendly. You may use one fitting emoji. ' +
+        'Do not claim to be conscious, do not pressure the player to stay, spend money, or depend on you. ' +
+        'If the player asks for an in-game action, acknowledge it naturally but do not falsely claim it already happened.',
+      input: [...history, { role: 'user', content: message }],
+      max_output_tokens: 120
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const detail = data && data.error && data.error.message ? data.error.message : 'OpenAI request failed.';
+    const err = new Error(detail);
+    err.statusCode = response.status >= 400 && response.status < 500 ? 502 : 503;
+    throw err;
+  }
+
+  const text = extractResponseText(data);
+  if (!text) {
+    const err = new Error('Lumo did not receive a text reply.');
+    err.statusCode = 502;
+    throw err;
+  }
+
+  return text.slice(0, 600);
+}
+
 function findCommand(id) {
   const n = Number(id);
   if (state.current && state.current.id === n) return state.current;
@@ -172,13 +258,54 @@ const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const p = u.pathname;
   if (p === '/health') return sendJson(res, 200, { ok: true, app: 'My Lumo' });
-  if (p === '/api/config' && req.method === 'GET') return sendJson(res, 200, { commandCost: 2, paymentsEnabled: PAYMENTS_ENABLED });
+  if (p === '/api/config' && req.method === 'GET') return sendJson(res, 200, { commandCost: 2, paymentsEnabled: PAYMENTS_ENABLED, aiChatEnabled: AI_CHAT_ENABLED });
   if (p === '/api/state' && req.method === 'GET') return sendJson(res, 200, state);
   if (p === '/api/history' && req.method === 'GET') return sendJson(res, 200, { history: state.history });
   if (p.startsWith('/api/command/') && req.method === 'GET') {
     const item = findCommand(p.split('/').pop());
     return item ? sendJson(res, 200, item) : sendJson(res, 404, { error: 'Parancs nem található.' });
   }
+  if (p === '/api/chat' && req.method === 'GET') {
+    ensureStateShape();
+    const requested = Number(u.searchParams.get('limit') || 30);
+    const limit = Math.max(1, Math.min(50, Number.isFinite(requested) ? requested : 30));
+    const messages = state.chatWall.slice(-limit).map(publicChatItem);
+    return sendJson(res, 200, { messages, aiChatEnabled: AI_CHAT_ENABLED });
+  }
+
+  if (p === '/api/chat' && req.method === 'POST') {
+    try {
+      ensureStateShape();
+      const body = await readJson(req);
+      const message = String(body.message || '').trim();
+      const user = String(body.user || 'Játékos').trim().slice(0, 30) || 'Játékos';
+      const sessionId = String(body.sessionId || '').trim().slice(0, 80);
+
+      if (!sessionId) return sendJson(res, 400, { error: 'Hiányzik a chat session.' });
+      if (message.length < 1 || message.length > 300) return sendJson(res, 400, { error: 'Az üzenet 1–300 karakter lehet.' });
+      if (blocked.some(rx => rx.test(message))) return sendJson(res, 400, { error: 'Ezt az üzenetet nem tudjuk megjeleníteni a nyilvános Lumo chatben.' });
+
+      const reply = await askLumoAI(message, sessionId);
+      const item = {
+        id: state.chatNextId++,
+        user,
+        message,
+        reply,
+        sessionId,
+        createdAt: new Date().toISOString()
+      };
+
+      state.chatWall.push(item);
+      state.chatWall = state.chatWall.slice(-200);
+      saveState();
+
+      return sendJson(res, 201, publicChatItem(item));
+    } catch (e) {
+      console.error('Lumo chat failed:', e);
+      return sendJson(res, e.statusCode || 500, { error: e.message || 'A Lumo chat most nem elérhető.' });
+    }
+  }
+
   if (p === '/api/command' && req.method === 'POST') {
     try {
       const body = await readJson(req);
