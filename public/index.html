@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#07111d" />
+  <meta name="description" content="My Lumo – Egy lény. Egy világ. Te irányítod." />
+  <title>My Lumo</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand" data-nav="home" aria-label="My Lumo főoldal">
+        <span class="paw">🐾</span><span><b>My Lumo</b><small>Egy lény. Egy világ. Te irányítod.</small></span>
+      </button>
+      <nav class="nav" aria-label="Fő navigáció">
+        <button class="nav-btn active" data-nav="home">⌂ <span>Főoldal</span></button>
+        <button class="nav-btn" data-nav="map">⌖ <span>Térkép</span></button>
+        <button class="nav-btn" data-nav="history">↶ <span>Előzmények</span></button>
+        <button class="nav-btn" data-nav="gallery">▧ <span>Galéria</span></button>
+        <button class="nav-btn" data-nav="shop">▢ <span>Bot</span></button>
+      </nav>
+      <div class="top-actions">
+        <button class="coin-pill" data-nav="shop">🪙 <b id="walletTop">20</b> <span>Lumo</span> ＋</button>
+        <button class="profile-pill">🌍 <span>Világ</span></button>
+      </div>
+    </header>
+
+    <main>
+      <section class="view active" id="view-home">
+        <div class="home-grid">
+          <article class="hero-card">
+            <img id="heroScene" class="hero-image" src="/assets/lumo-forest.jpg" alt="Lumo az erdőben" />
+            <div class="hero-shade"></div>
+            <div class="hero-copy">
+              <span class="eyebrow">ÉLŐ KÖZÖS VILÁG</span>
+              <h1>Egy lény. Egy világ.<br />Te irányítod.</h1>
+              <p>Emberek a világ minden tájáról adnak Lumónak utasításokat. Ami történik, megmarad.</p>
+            </div>
+            <div class="lumo-stats glass">
+              <div>🐱 <span>Név</span><b>Lumo</b></div>
+              <div>💚 <span>Hangulat</span><b id="statMood">Boldog</b></div>
+              <div>⭐ <span>Szint</span><b id="statLevel">12</b></div>
+              <div>🎒 <span>Tárgyak</span><b id="statItems">3</b></div>
+              <div>📍 <span>Hely</span><b id="statLocation">Erdő</b></div>
+            </div>
+            <div class="hero-action">
+              <button class="btn btn-green" id="heroCommand">Adj utasítást – 2 Lumo</button>
+              <span>Valódi emberek. Valódi döntések. Egyetlen Lumo.</span>
+            </div>
+          </article>
+
+          <article class="command-card panel">
+            <div class="section-kicker">UTASÍTÁS</div>
+            <h2>Mit csináljon Lumo?</h2>
+            <form id="commandForm">
+              <textarea id="commandInput" maxlength="140" placeholder="Például: Egyél pizzát, menj a városba, táncolj, vegyél egy autót…"></textarea>
+              <div class="command-meta"><span id="charCount">0/140</span><span>🔒 Biztonságos parancsok</span></div>
+              <button class="btn btn-purple wide" id="submitCommand" type="submit">✨ Küldés – 2 Lumo</button>
+            </form>
+            <div class="quick-title">Gyors parancsok</div>
+            <div class="quick-grid">
+              <button data-command="Egyél pizzát!">🍕 Egyél pizzát</button>
+              <button data-command="Táncolj!">🎵 Táncolj</button>
+              <button data-command="Menj a városba!">🏙️ Menj a városba</button>
+              <button data-command="Vegyél egy autót!">🚗 Vegyél autót</button>
+              <button data-command="Barátkozz egy kutyával!">🐶 Szerezz barátot</button>
+              <button data-command="Menj a tengerpartra!">🏖️ Tengerpart</button>
+              <button data-command="Vegyél egy csirkét!">🐔 Vegyél csirkét</button>
+              <button data-command="Építs egy házat!">🏠 Építs házat</button>
+            </div>
+          </article>
+        </div>
+
+        <section class="processing panel" id="processingPanel">
+          <div class="process-copy">
+            <span class="gear">⚙️</span>
+            <div><span class="section-kicker">PARANCS FELDOLGOZÁSA</span><h2 id="processTitle">Lumo várja a következő parancsot.</h2><p id="processSub">A következő ember döntése itt jelenik meg.</p></div>
+          </div>
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="queue-line"><span id="queueText">Nincs várakozó parancs.</span><b id="processPercent">0%</b></div>
+        </section>
+
+        <div class="lower-grid">
+          <article class="panel state-panel">
+            <div class="panel-head"><div><span class="section-kicker">A VÁLTOZÁS MEGMARAD</span><h2>Lumo világa folyamatosan épül</h2></div><button class="text-btn" data-nav="history">Összes →</button></div>
+            <div class="state-content">
+              <img id="stateImage" src="/assets/lumo-chicken.jpg" alt="Lumo és a világ változása" />
+              <div><div class="state-line"><span>Utolsó esemény</span><b id="lastAction">Várja a következő parancsot.</b></div><div class="state-line"><span>Helyszín</span><b id="lastLocation">Erdő</b></div><div class="inventory" id="inventory"></div></div>
+            </div>
+          </article>
+
+          <article class="panel history-panel">
+            <div class="panel-head"><div><span class="section-kicker">ÉLŐ ELŐZMÉNYEK</span><h2>Ki mit kért?</h2></div><button class="text-btn" data-nav="history">Megnyitás →</button></div>
+            <div id="miniHistory" class="history-list"></div>
+          </article>
+
+          <article class="panel tiktok-panel">
+            <div class="panel-head"><div><span class="section-kicker">TIKTOK MÓD</span><h2>Parancs → jelenet → poszt</h2></div></div>
+            <div class="phone-preview">
+              <img id="tiktokImage" src="/assets/tiktok-preview.jpg" alt="TikTok előnézet" />
+              <div class="phone-overlay"><b id="tiktokHeadline">Egy idegen ezt parancsolta Lumónak…</b><span id="tiktokCommand">„Vegyél egy csirkét!”</span><strong>Most te jössz. Mit csináljon legközelebb?</strong><button class="fake-cta">Utasítás: 2 Lumo</button></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-map">
+        <div class="page-head"><div><span class="section-kicker">ÉLŐ VILÁG</span><h1>Hol van most Lumo?</h1><p>A helyszín a parancsok alapján változik, és megmarad.</p></div><div class="status-badge">📍 <span id="mapCurrent">Erdő</span></div></div>
+        <div class="map-layout">
+          <article class="map-card panel">
+            <img src="/assets/world-map.jpg" alt="My Lumo világtérkép" />
+            <button class="map-pin pin-mountain" data-command="Menj a hegyekbe!">⛰️ Hegyek</button>
+            <button class="map-pin pin-city" data-command="Menj a városba!">🏙️ Város</button>
+            <button class="map-pin pin-forest" data-command="Menj az erdőbe!">🌲 Erdő</button>
+            <button class="map-pin pin-beach" data-command="Menj a tengerpartra!">🏖️ Tengerpart</button>
+            <button class="map-pin pin-home" data-command="Menj haza!">🏠 Otthon</button>
+            <div class="lumo-marker" id="lumoMarker">🐱</div>
+          </article>
+          <aside class="panel map-side"><h2>Lumo útja</h2><p>Nyomj egy helyszínre, és ugyanúgy parancs lesz belőle. A parancs bekerül a közös sorba.</p><div id="worldChanges" class="changes-list"></div></aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-history">
+        <div class="page-head"><div><span class="section-kicker">KÖZÖS TÖRTÉNET</span><h1>Előzmények</h1><p>Minden teljesített parancs egy új fejezet Lumo életében.</p></div><div class="status-badge">🌍 Világméretű</div></div>
+        <article class="panel"><div class="history-table" id="fullHistory"></div></article>
+      </section>
+
+      <section class="view" id="view-gallery">
+        <div class="page-head"><div><span class="section-kicker">LEHETŐSÉGEK</span><h1>Mit tud Lumo csinálni?</h1><p>A jóváhagyott koncepció jelenetei alapján.</p></div></div>
+        <div class="gallery-grid">
+          <button class="gallery-card" data-command="Táncolj!"><img src="/assets/action-dance.jpg" alt="Lumo táncol" /><span>🎵 Táncolj!</span></button>
+          <button class="gallery-card" data-command="Menj a városba!"><img src="/assets/action-city.jpg" alt="Lumo a városban" /><span>🏙️ Menj a városba!</span></button>
+          <button class="gallery-card" data-command="Vegyél egy autót!"><img src="/assets/action-car.jpg" alt="Lumo autóval" /><span>🚗 Vegyél autót!</span></button>
+          <button class="gallery-card" data-command="Barátkozz egy kutyával!"><img src="/assets/action-friend.jpg" alt="Lumo kutyával" /><span>🐶 Szerezz barátot!</span></button>
+          <button class="gallery-card" data-command="Menj a tengerpartra!"><img src="/assets/action-beach.jpg" alt="Lumo tengerparton" /><span>🏖️ Menj a tengerpartra!</span></button>
+          <button class="gallery-card" data-command="Építs egy házat!"><img src="/assets/action-house.jpg" alt="Lumo házat épít" /><span>🏠 Építs házat!</span></button>
+          <button class="gallery-card" data-command="Egyél pizzát!"><img src="/assets/lumo-pizza.jpg" alt="Lumo pizzát eszik" /><span>🍕 Egyél pizzát!</span></button>
+          <button class="gallery-card" data-command="Vegyél egy csirkét!"><img src="/assets/lumo-chicken.jpg" alt="Lumo csirkével" /><span>🐔 Vegyél csirkét!</span></button>
+        </div>
+      </section>
+
+      <section class="view" id="view-shop">
+        <div class="page-head"><div><span class="section-kicker">LUMO PÉNZ</span><h1>Lumo feltöltés</h1><p>Most DEMO módban működik. Valódi kártyás fizetést csak később kapcsolunk be.</p></div><div class="status-badge">🪙 Egyenleg: <b id="walletShop">20</b></div></div>
+        <div class="shop-grid">
+          <article class="bundle panel"><span class="bundle-icon">✨</span><h2>10 Lumo</h2><p>5 parancs</p><button data-topup="10" class="btn btn-outline">Demo feltöltés</button></article>
+          <article class="bundle panel popular"><span class="tag">NÉPSZERŰ</span><span class="bundle-icon">🌟</span><h2>30 Lumo</h2><p>15 parancs</p><button data-topup="30" class="btn btn-purple">Demo feltöltés</button></article>
+          <article class="bundle panel"><span class="bundle-icon">💫</span><h2>100 Lumo</h2><p>50 parancs</p><button data-topup="100" class="btn btn-outline">Demo feltöltés</button></article>
+        </div>
+        <article class="panel payment-note"><b>Valódi fizetés még nincs bekapcsolva.</b><span>A játék működését előbb stabilizáljuk. Később Stripe + Lumo egyenleg kerül ide.</span></article>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="commandModal" hidden>
+    <div class="modal panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" id="closeModal" aria-label="Bezárás">×</button>
+      <span class="section-kicker">ÚJ PARANCS</span><h2 id="modalTitle">Mit csináljon Lumo?</h2>
+      <textarea id="modalInput" maxlength="140" placeholder="Írd be a parancsot…"></textarea>
+      <button id="modalSend" class="btn btn-purple wide">✨ Küldés – 2 Lumo</button>
+    </div>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
