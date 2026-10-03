@@ -1,3 +1,7 @@
+## Technical baseline
+- Unity 6.6 (6000.6.4f1)
+- This is the fixed editor baseline for My Lumo.
+
 # My Lumo — Agreed Game Design
 
 Visual target: polished warm 3D pet-life game at least as lively as the uploaded reference video, not a low-poly browser demo.
