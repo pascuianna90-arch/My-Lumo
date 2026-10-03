@@ -25,6 +25,9 @@ let state = loadState();
 function ensureStateShape() {
   if (!Array.isArray(state.chatWall)) state.chatWall = [];
   if (!Number.isFinite(state.chatNextId)) state.chatNextId = 1;
+  if (!Array.isArray(state.communityChat)) state.communityChat = [];
+  if (!Number.isFinite(state.communityChatNextId)) state.communityChatNextId = 1;
+  if (!Array.isArray(state.communityReports)) state.communityReports = [];
 }
 ensureStateShape();
 
@@ -133,6 +136,16 @@ function publicChatItem(item) {
     user: item.user,
     message: item.message,
     reply: item.reply,
+    createdAt: item.createdAt
+  };
+}
+
+function publicCommunityItem(item) {
+  return {
+    id: item.id,
+    user: item.user,
+    message: item.message,
+    country: item.country,
     createdAt: item.createdAt
   };
 }
@@ -303,6 +316,83 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       console.error('Lumo chat failed:', e);
       return sendJson(res, e.statusCode || 500, { error: e.message || 'A Lumo chat most nem elérhető.' });
+    }
+  }
+
+  if (p === '/api/community-chat' && req.method === 'GET') {
+    ensureStateShape();
+    const requested = Number(u.searchParams.get('limit') || 50);
+    const limit = Math.max(1, Math.min(100, Number.isFinite(requested) ? requested : 50));
+    const messages = state.communityChat.slice(-limit).map(publicCommunityItem);
+    return sendJson(res, 200, { messages });
+  }
+
+  if (p === '/api/community-chat' && req.method === 'POST') {
+    try {
+      ensureStateShape();
+      const body = await readJson(req);
+      const message = String(body.message || '').trim();
+      const user = String(body.user || 'Játékos').trim().slice(0, 30) || 'Játékos';
+      const country = String(body.country || '🌍').trim().slice(0, 40);
+      const sessionId = String(body.sessionId || '').trim().slice(0, 80);
+
+      if (!sessionId) return sendJson(res, 400, { error: 'Hiányzik a chat session.' });
+      if (message.length < 1 || message.length > 300) return sendJson(res, 400, { error: 'Az üzenet 1–300 karakter lehet.' });
+      if (blocked.some(rx => rx.test(message))) return sendJson(res, 400, { error: 'Ezt az üzenetet nem tudjuk megjeleníteni a közösségi chatben.' });
+
+      const now = Date.now();
+      const recent = state.communityChat.filter(x => x.sessionId === sessionId && now - x.createdAtMs < 5000);
+      if (recent.length >= 2) return sendJson(res, 429, { error: 'Kicsit lassabban írj, kérlek.' });
+
+      const item = {
+        id: state.communityChatNextId++,
+        user,
+        message,
+        country,
+        sessionId,
+        createdAt: new Date().toISOString(),
+        createdAtMs: now
+      };
+
+      state.communityChat.push(item);
+      state.communityChat = state.communityChat.slice(-500);
+      saveState();
+
+      return sendJson(res, 201, publicCommunityItem(item));
+    } catch (e) {
+      return sendJson(res, 400, { error: e.message || 'Hibás chat kérés.' });
+    }
+  }
+
+  if (p === '/api/community-chat/report' && req.method === 'POST') {
+    try {
+      ensureStateShape();
+      const body = await readJson(req);
+      const messageId = Number(body.messageId);
+      const sessionId = String(body.sessionId || '').trim().slice(0, 80);
+      const reason = String(body.reason || 'other').trim().slice(0, 80);
+
+      if (!sessionId || !Number.isFinite(messageId))
+        return sendJson(res, 400, { error: 'Hiányos bejelentés.' });
+
+      const exists = state.communityChat.some(x => x.id === messageId);
+      if (!exists) return sendJson(res, 404, { error: 'Az üzenet nem található.' });
+
+      const duplicate = state.communityReports.some(x => x.messageId === messageId && x.sessionId === sessionId);
+      if (!duplicate) {
+        state.communityReports.push({
+          messageId,
+          sessionId,
+          reason,
+          createdAt: new Date().toISOString()
+        });
+        state.communityReports = state.communityReports.slice(-1000);
+        saveState();
+      }
+
+      return sendJson(res, 200, { ok: true });
+    } catch (e) {
+      return sendJson(res, 400, { error: e.message || 'Hibás bejelentés.' });
     }
   }
 
