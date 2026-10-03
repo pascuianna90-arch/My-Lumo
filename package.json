@@ -1,0 +1,13 @@
+{
+  "name": "my-lumo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "My Lumo - one creature, one world, controlled by people worldwide.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
