@@ -1,3 +1,9 @@
+# Unity 6.6 CLEAN baseline
+
+The Unity project is fixed to **Unity 6.6 (6000.6.4f1)**.
+The obsolete Unity Version Control / `com.unity.collab-proxy` package is intentionally removed because it caused Safe Mode compilation errors in Unity 6.6.
+Use only the packages declared in `Packages/manifest.json`.
+
 # Unity version
 
 This project is fixed to **Unity 6.6 (6000.6.4f1)**. All new My Lumo work should use this editor version.
