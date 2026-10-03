@@ -1,3 +1,7 @@
+# Unity version
+
+This project is fixed to **Unity 6.6 (6000.6.4f1)**. All new My Lumo work should use this editor version.
+
 # My Lumo — Unity Game Client
 
 Serious 3D life-simulation foundation based on the uploaded reference video. The approved white, fluffy, blue-eyed Lumo remains the exact main character target.
