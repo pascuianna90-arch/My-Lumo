@@ -29,3 +29,6 @@ Open http://localhost:3000
 ## Important
 
 Real payments are intentionally disabled. The next production step is to connect Stripe only after business/tax setup is ready.
+
+
+Deployment marker: 3D live build trigger.
